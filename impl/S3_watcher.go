@@ -34,8 +34,9 @@ func (s3 S3) Watch(event api.IOEvent) bool {
 	ctx := context.Background()
 	minioClient := s3.initS3()
 	minioClient.IsOnline()
+	setupOk := event.Setup()
 
-	for true {
+	for setupOk {
 
 		files := s3.ListFiles(minioClient)
 		for _, v := range files {
