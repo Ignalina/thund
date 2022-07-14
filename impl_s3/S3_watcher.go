@@ -55,7 +55,7 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 
 	for index, handler := range eventHandlers {
 		setupOk = handler.Setup(s3)
-		if setupOk {
+		if !setupOk {
 			log.Fatalln("Failed setup eventHandler nr " + strconv.Itoa(index))
 		}
 	}
