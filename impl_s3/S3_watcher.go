@@ -20,6 +20,9 @@ type S3 struct {
 	Token         string
 	WatchFolder   string
 	GraceMilliSec int
+	MinioClient   *minio.Client
+	Ctx           context.Context
+
 	//	Frontagent api.FrontAgent
 }
 
@@ -31,18 +34,18 @@ type FileEntity struct {
 // Process all files , and for every sucessful process , add a ".done" file.
 
 func (s3 S3) Watch(event api.IOEvent) bool {
-	ctx := context.Background()
-	minioClient := s3.initS3()
-	minioClient.IsOnline()
-	setupOk := event.Setup()
+	s3.Ctx = context.Background()
+	s3.MinioClient = s3.initS3()
+
+	setupOk := event.Setup(s3)
 
 	for setupOk {
 
-		files := s3.ListFiles(minioClient)
+		files := s3.ListFiles(s3.MinioClient)
 		for _, v := range files {
 
 			opts := minio.GetObjectOptions{}
-			o, _ := minioClient.GetObject(ctx, s3.BucketName, v.Name, opts)
+			o, _ := s3.MinioClient.GetObject(s3.Ctx, s3.BucketName, v.Name, opts)
 
 			sucess := event.Process(o, v)
 			if sucess { // create a marker file with original file name + ".done"
@@ -50,7 +53,7 @@ func (s3 S3) Watch(event api.IOEvent) bool {
 				dummyFileName := v.Name + ".done"
 
 				myReader := strings.NewReader(dummyFileName)
-				minioClient.PutObject(ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
+				s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 			}
 		}
 
@@ -101,7 +104,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]FileEntity {
 }
 
 func (s3 S3) initS3() *minio.Client {
-	ctx := context.Background()
+	//	ctx := context.Background()
 	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(s3.User, s3.Password, s3.Token),
 		Secure: s3.UseSSL,
@@ -113,7 +116,6 @@ func (s3 S3) initS3() *minio.Client {
 	log.Printf("%#v\n", minioClient) // minioClient is now set up
 	return minioClient
 }
-
 
 func (s3 S3) GetFileSet(minioclient *minio.Client) map[string]int64 {
 	return s3.GetFilteredFileSet("", minioclient)
