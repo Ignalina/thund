@@ -63,7 +63,7 @@ func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bo
 	return true
 }
 
-func (kee KafkaEmitEvent) Setup() bool {
+func (kee KafkaEmitEvent) Setup(customParams interface{}) bool {
 	fmt.Println("Kafka Emit setup")
 
 	var input = viper.GetString("kafkaemit.template")

@@ -32,7 +32,7 @@ func (de DummyEvent) Process(reader io.Reader, customParams interface{}) bool {
 	return true
 }
 
-func (de DummyEvent) Setup() bool {
+func (de DummyEvent) Setup(customParams interface{}) bool {
 	fmt.Println("dummy setup")
 	return true
 }

@@ -41,7 +41,8 @@ type S3 struct {
 	Token         string
 	WatchFolder   string
 	GraceMilliSec int
-	//	Frontagent api.Processor
+	MinioClient   *minio.Client
+	Ctx           context.Context
 }
 
 // Process all files , and for every sucessful process , add a ".done" file.
@@ -53,20 +54,20 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 	setupOk := true
 
 	for index, handler := range eventHandlers {
-		setupOk = handler.Setup()
+		setupOk = handler.Setup(s3)
 		if setupOk {
 			log.Fatalln("Failed setup eventHandler nr " + strconv.Itoa(index))
 		}
 	}
 
-	//	setupOk := event.Setup()
-
 	for setupOk {
 
-		files := s3.ListFiles(minioClient)
+		files := s3.ListFiles(s3.MinioClient)
 		for _, v := range files {
 
 			opts := minio.GetObjectOptions{}
+
+			//	setupOk := event.Setup()
 			o, _ := minioClient.GetObject(ctx, s3.BucketName, v.Name, opts)
 			var sucess bool = true
 
@@ -83,7 +84,7 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 				dummyFileName := v.Name + ".done"
 
 				myReader := strings.NewReader(dummyFileName)
-				minioClient.PutObject(ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
+				s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 			}
 
 		}
@@ -149,7 +150,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 }
 
 func (s3 S3) initS3() *minio.Client {
-	ctx := context.Background()
+	//	ctx := context.Background()
 	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(s3.User, s3.Password, s3.Token),
 		Secure: s3.UseSSL,
@@ -159,18 +160,6 @@ func (s3 S3) initS3() *minio.Client {
 	}
 
 	log.Printf("%#v\n", minioClient) // minioClient is now set up
-	err = minioClient.MakeBucket(ctx, s3.BucketName, minio.MakeBucketOptions{})
-	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
-		exists, errBucketExists := minioClient.BucketExists(ctx, s3.BucketName)
-		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", s3.BucketName)
-		} else {
-			log.Fatalln(err)
-		}
-	} else {
-		log.Printf("Successfully created %s\n", s3.BucketName)
-	}
 	return minioClient
 }
 
