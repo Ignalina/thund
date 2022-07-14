@@ -17,8 +17,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package api
+package bundledImpl
 
-type Watcher interface {
-	Watch(event []IOEvent) bool
+import (
+	"fmt"
+	"io"
+)
+
+type DummyEvent struct {
+}
+
+func (de DummyEvent) Process(reader io.Reader, customParams interface{}) bool {
+	fmt.Println("dummy process")
+	return true
+}
+
+func (de DummyEvent) Setup() bool {
+	fmt.Println("dummy setup")
+	return true
 }

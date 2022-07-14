@@ -19,6 +19,12 @@
 
 package api
 
-type Watcher interface {
-	Watch(event []IOEvent) bool
+type Processor struct {
+	IOEventImpl []IOEvent
+	WatcherImpl Watcher
+}
+
+func (fa Processor) Start() {
+	fa.WatcherImpl.Watch(fa.IOEventImpl)
+
 }

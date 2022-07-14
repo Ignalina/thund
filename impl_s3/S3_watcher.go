@@ -1,3 +1,22 @@
+/*
+ * MIT No Attribution
+ *
+ * Copyright 2022 Rickard Ernst Björn Lundin (rickard@ignalina.dk)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package impl_s3
 
 import (
@@ -6,7 +25,9 @@ import (
 	"github.com/ignalina/thund/api"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/spf13/viper"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,21 +41,25 @@ type S3 struct {
 	Token         string
 	WatchFolder   string
 	GraceMilliSec int
-	//	Frontagent api.FrontAgent
-}
-
-type FileEntity struct {
-	Name string
-	Size int64
+	//	Frontagent api.Processor
 }
 
 // Process all files , and for every sucessful process , add a ".done" file.
 
-func (s3 S3) Watch(event api.IOEvent) bool {
+func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 	ctx := context.Background()
 	minioClient := s3.initS3()
 	minioClient.IsOnline()
-	setupOk := event.Setup()
+	setupOk := true
+
+	for index, handler := range eventHandlers {
+		setupOk = handler.Setup()
+		if setupOk {
+			log.Fatalln("Failed setup eventHandler nr " + strconv.Itoa(index))
+		}
+	}
+
+	//	setupOk := event.Setup()
 
 	for setupOk {
 
@@ -43,8 +68,16 @@ func (s3 S3) Watch(event api.IOEvent) bool {
 
 			opts := minio.GetObjectOptions{}
 			o, _ := minioClient.GetObject(ctx, s3.BucketName, v.Name, opts)
+			var sucess bool = true
 
-			sucess := event.Process(o, v)
+			for _, handler := range eventHandlers {
+				sucess := handler.Process(o, v)
+				if !sucess {
+					break
+				}
+
+			}
+
 			if sucess { // create a marker file with original file name + ".done"
 				dummyFile := "Dummy file"
 				dummyFileName := v.Name + ".done"
@@ -52,6 +85,7 @@ func (s3 S3) Watch(event api.IOEvent) bool {
 				myReader := strings.NewReader(dummyFileName)
 				minioClient.PutObject(ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 			}
+
 		}
 
 		time.Sleep(time.Duration(s3.GraceMilliSec) * time.Millisecond)
@@ -60,7 +94,21 @@ func (s3 S3) Watch(event api.IOEvent) bool {
 	return true
 }
 
-func (s3 S3) ListFiles(minioClient *minio.Client) map[string]FileEntity {
+func NewS3() S3 {
+	s3 := S3{
+		Endpoint:      viper.GetString("s3.endpoint"), // 10.1.1.22
+		UseSSL:        viper.GetBool("s3.usessl"),
+		BucketName:    viper.GetString("s3.bucketname"), //"bucket1"
+		User:          viper.GetString("s3.user"),
+		Password:      viper.GetString("s3.password"),
+		Token:         viper.GetString("s3.token"),
+		WatchFolder:   viper.GetString("s3.watchfolder"),
+		GraceMilliSec: viper.GetInt("s3.gracemillisec"),
+	}
+	return s3
+}
+
+func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -73,7 +121,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]FileEntity {
 		//		Prefix:       s3.WatchFolder,
 	})
 
-	res_files := make(map[string]FileEntity)
+	res_files := make(map[string]api.FileEntity)
 
 	for object := range objectCh {
 		if object.Err != nil {
@@ -82,7 +130,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]FileEntity {
 		}
 
 		if !strings.HasSuffix(object.Key, "/") {
-			res_files[object.Key] = FileEntity{
+			res_files[object.Key] = api.FileEntity{
 				Name: object.Key,
 				Size: object.Size,
 			}
@@ -124,24 +172,6 @@ func (s3 S3) initS3() *minio.Client {
 		log.Printf("Successfully created %s\n", s3.BucketName)
 	}
 	return minioClient
-}
-
-func (s3 S3) GetReadyFileSet(minioclient *minio.Client) map[string]int64 {
-
-	ls1 := s3.GetFileSet(minioclient)
-	GraceMilliSec := s3.GraceMilliSec
-	time.Sleep(time.Duration(GraceMilliSec) * time.Millisecond)
-	ls2 := s3.GetFileSet(minioclient)
-	for fileName, _ := range ls1 {
-		if _, exists := ls2[fileName]; exists { // dummy test to check that file still exists
-			sizeDiff := ls1[fileName] - ls2[fileName] //Check that file size is consistent
-			if sizeDiff != 0 {
-				delete(ls1, fileName) //   Remove file since size differs (Might be growing still)
-			}
-		}
-	}
-
-	return ls1
 }
 
 func (s3 S3) GetFileSet(minioclient *minio.Client) map[string]int64 {

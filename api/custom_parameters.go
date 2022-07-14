@@ -19,6 +19,7 @@
 
 package api
 
-type Watcher interface {
-	Watch(event []IOEvent) bool
+type FileEntity struct {
+	Name string
+	Size int64
 }
