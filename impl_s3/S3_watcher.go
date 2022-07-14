@@ -111,38 +111,9 @@ func (s3 S3) initS3() *minio.Client {
 	}
 
 	log.Printf("%#v\n", minioClient) // minioClient is now set up
-	err = minioClient.MakeBucket(ctx, s3.BucketName, minio.MakeBucketOptions{})
-	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
-		exists, errBucketExists := minioClient.BucketExists(ctx, s3.BucketName)
-		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", s3.BucketName)
-		} else {
-			log.Fatalln(err)
-		}
-	} else {
-		log.Printf("Successfully created %s\n", s3.BucketName)
-	}
 	return minioClient
 }
 
-func (s3 S3) GetReadyFileSet(minioclient *minio.Client) map[string]int64 {
-
-	ls1 := s3.GetFileSet(minioclient)
-	GraceMilliSec := s3.GraceMilliSec
-	time.Sleep(time.Duration(GraceMilliSec) * time.Millisecond)
-	ls2 := s3.GetFileSet(minioclient)
-	for fileName, _ := range ls1 {
-		if _, exists := ls2[fileName]; exists { // dummy test to check that file still exists
-			sizeDiff := ls1[fileName] - ls2[fileName] //Check that file size is consistent
-			if sizeDiff != 0 {
-				delete(ls1, fileName) //   Remove file since size differs (Might be growing still)
-			}
-		}
-	}
-
-	return ls1
-}
 
 func (s3 S3) GetFileSet(minioclient *minio.Client) map[string]int64 {
 	return s3.GetFilteredFileSet("", minioclient)
