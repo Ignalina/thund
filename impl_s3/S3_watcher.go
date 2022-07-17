@@ -27,6 +27,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
 	"log"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -97,9 +98,9 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 
 func NewS3() S3 {
 	s3 := S3{
-		Endpoint:      viper.GetString("s3.endpoint"), // 10.1.1.22
+		Endpoint:      viper.GetString("s3.endpoint"),
 		UseSSL:        viper.GetBool("s3.usessl"),
-		BucketName:    viper.GetString("s3.bucketname"), //"bucket1"
+		BucketName:    viper.GetString("s3.bucketname"),
 		User:          viper.GetString("s3.user"),
 		Password:      viper.GetString("s3.password"),
 		Token:         viper.GetString("s3.token"),
@@ -176,4 +177,10 @@ func (s3 S3) GetFilteredFileSet(filter string, minioClient *minio.Client) map[st
 	}
 
 	return m
+}
+
+// extension example strconv.Itoa(key)+."parquet"
+func fullDestinPath(destDir string, fullSourcePath string, key int, extension string) string {
+	destinName := filepath.Join(destDir, filepath.Base(fullSourcePath)+"_"+extension)
+	return destinName
 }

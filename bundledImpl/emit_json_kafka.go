@@ -71,6 +71,10 @@ func (kee KafkaEmitEvent) Setup(customParams interface{}) bool {
 	kee.Data = make(map[string]interface{}, 4)
 	kee.Tmpl = template.Must(template.New("kafkaemit.tmpl").Parse(input))
 
+	// TESTING
+	kee.Data["qualifiedName"] = "qualifiedName"
+	kee.Data["fileSize"] = "filnamnet"
+
 	var err error
 	kee.Producer, err = kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafkaemit.bootstrap")})
 	if err != nil {

@@ -19,7 +19,7 @@ func main() {
 
 	fa := api.Processor{
 		WatcherImpl: impl_s3.NewS3(),
-		IOEventImpl: []api.IOEvent{bundledImpl.DummyEvent{}},
+		IOEventImpl: []api.IOEvent{bundledImpl.DummyEvent{}, bundledImpl.KafkaEmitEvent{}},
 	}
 
 	fa.Start()
