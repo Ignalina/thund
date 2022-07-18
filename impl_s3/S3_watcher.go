@@ -180,7 +180,7 @@ func (s3 S3) GetFilteredFileSet(filter string, minioClient *minio.Client) map[st
 }
 
 // extension example strconv.Itoa(key)+."parquet"
-func FullDestinPath(destDir string, fullSourcePath string, key int, extension string) string {
+func FullDestinPath(destDir string, fullSourcePath string, extension string) string {
 	destinName := filepath.Join(destDir, filepath.Base(fullSourcePath)+"_"+extension)
 	return destinName
 }
