@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ignalina/thund/api"
 	"github.com/ignalina/thund/bundledImpl"
-	"github.com/ignalina/thund/impl_s3"
 	"github.com/spf13/viper"
 	"os"
 )
@@ -18,7 +17,7 @@ func main() {
 	}
 
 	fa := api.Processor{
-		WatcherImpl: impl_s3.NewS3(),
+		WatcherImpl: bundledImpl.NewS3(),
 		IOEventImpl: []api.IOEvent{bundledImpl.DummyEvent{}, bundledImpl.KafkaEmitEvent{}},
 	}
 

@@ -44,8 +44,8 @@ func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bo
 	var fe api.FileEntity
 	fe = customParams.(api.FileEntity)
 
-	kee.Data["path"] = fe.Name
-	kee.Data["fileSize"] = fe.Size
+	kee.Data["name"] = fe.Name
+	kee.Data["filesize"] = fe.Size
 
 	buf := &bytes.Buffer{}
 	err := kee.Tmpl.Execute(buf, kee.Data)
@@ -77,13 +77,13 @@ func (kee KafkaEmitEvent) Setup(customParams interface{}) bool {
 	kee.Data = make(map[string]interface{}, 8)
 	kee.Tmpl = template.Must(template.New("kafkaemit.tmpl").Parse(jsonTemplate))
 
-	kee.Data["traceId"] = "123"
-	kee.Data["createTime"] = "123"
-	kee.Data["lineCount"] = "FilMeIn"
-	kee.Data["modifiedTime"] = "123"
+	kee.Data["traceid"] = "123"
+	kee.Data["createtime"] = "123"
+	kee.Data["linecount"] = "FilMeIn"
+	kee.Data["modifiedtime"] = "123"
 	kee.Data["name"] = "FilMeIn"
 	kee.Data["path"] = "FilMeIn"
-	kee.Data["qualifiedName"] = "FillMeIn"
+	kee.Data["qualifiedname"] = "FillMeIn"
 	kee.Data["sum"] = "FillMeIn"
 
 	kee.Producer, err = kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafkaemit.bootstrap")})

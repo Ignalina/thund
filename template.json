@@ -1,10 +1,11 @@
 {
-  "traceId": "12345678",
-  "createTime": 1649090079651,
-  "fileSize": 12345,
-  "lineCount": 1234567,
+  "traceId": {{.traceid}},
+  "createTime": {{.createtime}},
+  "fileSize": {{.filesize}},
+  "lineCount": {{.linecount}},
   "modifiedTime": 1649090079854,
-  "name": "s3a://bucket1/utkatalog/smoketest_2022_07_19.txt",
-  "path": "blabla",
-  "sum": "blabla"
+  "name": {{.name}},
+  "path": {{.path}},
+  "sum": {{.sum}}
 }
+
