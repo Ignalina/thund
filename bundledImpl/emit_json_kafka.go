@@ -26,6 +26,7 @@ import (
 	"github.com/ignalina/thund/api"
 	"github.com/spf13/viper"
 	"io"
+	"os"
 	"text/template"
 )
 
@@ -43,7 +44,7 @@ func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bo
 	var fe api.FileEntity
 	fe = customParams.(api.FileEntity)
 
-	kee.Data["sourcefile"] = fe.Name
+	kee.Data["path"] = fe.Name
 	kee.Data["fileSize"] = fe.Size
 
 	buf := &bytes.Buffer{}
@@ -66,16 +67,25 @@ func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bo
 func (kee KafkaEmitEvent) Setup(customParams interface{}) bool {
 	fmt.Println("Kafka Emit setup")
 
-	var input = viper.GetString("kafkaemit.template")
+	b, err := os.ReadFile(viper.GetString("kafkaemit.template"))
+	if err != nil {
+		panic(err)
+	}
 
-	kee.Data = make(map[string]interface{}, 4)
-	kee.Tmpl = template.Must(template.New("kafkaemit.tmpl").Parse(input))
+	jsonTemplate := string(b)
 
-	// TESTING
-	kee.Data["qualifiedName"] = "qualifiedName"
-	kee.Data["fileSize"] = "filnamnet"
+	kee.Data = make(map[string]interface{}, 8)
+	kee.Tmpl = template.Must(template.New("kafkaemit.tmpl").Parse(jsonTemplate))
 
-	var err error
+	kee.Data["traceId"] = "123"
+	kee.Data["createTime"] = "123"
+	kee.Data["lineCount"] = "FilMeIn"
+	kee.Data["modifiedTime"] = "123"
+	kee.Data["name"] = "FilMeIn"
+	kee.Data["path"] = "FilMeIn"
+	kee.Data["qualifiedName"] = "FillMeIn"
+	kee.Data["sum"] = "FillMeIn"
+
 	kee.Producer, err = kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafkaemit.bootstrap")})
 	if err != nil {
 		panic(err)
