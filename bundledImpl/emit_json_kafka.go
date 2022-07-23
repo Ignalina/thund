@@ -37,12 +37,12 @@ type KafkaEmitEvent struct {
 	Topic    string
 }
 
-func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bool {
+func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bool {
 
 	fmt.Println("Kafka Emit process")
 
-	var fe api.FileEntity
-	fe = customParams.(api.FileEntity)
+	//	var fe *api.FileEntity
+	fe := customParams.(*api.FileEntity)
 
 	kee.Data["name"] = fe.Name
 	kee.Data["filesize"] = fe.Size
@@ -64,7 +64,7 @@ func (kee KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bo
 	return true
 }
 
-func (kee KafkaEmitEvent) Setup(customParams interface{}) bool {
+func (kee *KafkaEmitEvent) Setup(customParams interface{}) bool {
 	fmt.Println("Kafka Emit setup")
 
 	b, err := os.ReadFile(viper.GetString("kafkaemit.template"))

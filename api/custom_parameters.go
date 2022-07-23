@@ -20,6 +20,16 @@
 package api
 
 type FileEntity struct {
-	Name string
-	Size int64
+	Name      string
+	Size      int64
+	Lines     int64
+	Sum       []byte
+	Header    string
+	Footer    string
+	HashName  bool
+	HasSize   bool
+	HasLines  bool
+	HasSum    bool
+	HasHeader bool
+	HasFooter bool
 }

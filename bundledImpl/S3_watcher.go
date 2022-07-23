@@ -48,10 +48,11 @@ type S3 struct {
 
 // Process all files , and for every sucessful process , add a ".done" file.
 
-func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
+func (s3 *S3) Watch(eventHandlers []api.IOEvent) bool {
 	ctx := context.Background()
-	minioClient := s3.initS3()
-	minioClient.IsOnline()
+	s3.initS3()
+	s3.Ctx = ctx
+	s3.MinioClient.IsOnline()
 	setupOk := true
 
 	for index, handler := range eventHandlers {
@@ -63,17 +64,17 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 
 	for setupOk {
 
-		files := s3.ListFiles(s3.MinioClient)
-		for _, v := range files {
+		fileEntityMap := s3.ListFiles(s3.MinioClient)
+		for _, fileEntity := range fileEntityMap {
 
 			opts := minio.GetObjectOptions{}
 
 			//	setupOk := event.Setup()
-			o, _ := minioClient.GetObject(ctx, s3.BucketName, v.Name, opts)
+			o, _ := s3.MinioClient.GetObject(ctx, s3.BucketName, fileEntity.Name, opts)
 			var sucess bool = true
 
 			for _, handler := range eventHandlers {
-				sucess := handler.Process(o, v)
+				sucess := handler.Process(o, &fileEntity)
 				if !sucess {
 					break
 				}
@@ -82,9 +83,9 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 
 			if sucess { // create a marker file with original file name + ".done"
 				dummyFile := "Dummy file"
-				dummyFileName := v.Name + ".done"
+				dummyFileName := fileEntity.Name + ".done"
 
-				myReader := strings.NewReader(dummyFileName)
+				myReader := strings.NewReader(dummyFile)
 				s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 			}
 
@@ -96,7 +97,7 @@ func (s3 S3) Watch(eventHandlers []api.IOEvent) bool {
 	return true
 }
 
-func NewS3() S3 {
+func NewS3() *S3 {
 	s3 := S3{
 		Endpoint:      viper.GetString("s3.endpoint"),
 		UseSSL:        viper.GetBool("s3.usessl"),
@@ -107,7 +108,7 @@ func NewS3() S3 {
 		WatchFolder:   viper.GetString("s3.watchfolder"),
 		GraceMilliSec: viper.GetInt("s3.gracemillisec"),
 	}
-	return s3
+	return &s3
 }
 
 func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
@@ -119,8 +120,8 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 	objectCh := minioClient.ListObjects(ctx, s3.BucketName, minio.ListObjectsOptions{
 		WithVersions: false,
 		WithMetadata: true,
-		Recursive:    false,
-		//		Prefix:       s3.WatchFolder,
+		Recursive:    true,
+		Prefix:       s3.WatchFolder,
 	})
 
 	res_files := make(map[string]api.FileEntity)
@@ -150,7 +151,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 	return res_files
 }
 
-func (s3 S3) initS3() *minio.Client {
+func (s3 *S3) initS3() *minio.Client {
 	//	ctx := context.Background()
 	minioClient, err := minio.New(s3.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(s3.User, s3.Password, s3.Token),
@@ -159,6 +160,7 @@ func (s3 S3) initS3() *minio.Client {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	s3.MinioClient = minioClient
 
 	log.Printf("%#v\n", minioClient) // minioClient is now set up
 	return minioClient

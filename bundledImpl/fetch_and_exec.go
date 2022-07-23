@@ -20,19 +20,48 @@
 package bundledImpl
 
 import (
+	"bufio"
 	"fmt"
+	"github.com/ignalina/thund/api"
 	"io"
+	"log"
+	"os"
 )
 
-type DummyEvent struct {
+type FetchAndExecEvent struct {
+	destinationFolder string
 }
 
-func (de *DummyEvent) Process(reader io.Reader, customParams interface{}) bool {
-	fmt.Println("dummy process")
+func (fae FetchAndExecEvent) Process(reader io.Reader, customParams interface{}) bool {
+	fmt.Println("Fetch And Exec Process")
+	// download whole file , do checksum , cal lines ,extract header/footer
+	fe :=customParams.( api.FileEntity)
+
+	file, err := os.Open(fae.destinationFolder+fe.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	if !fe.HasLines {
+		io.Copy(file,reader)
+	} else {
+		var lineCnt int64
+		scanner := bufio.NewScanner(reader)
+		// optionally, resize scanner's capacity for lines over 64K, see next example
+		for scanner.Scan() {
+			file.Write([]byte(scanner.Text()))
+			lineCnt+=1
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+		fe.Lines=lineCnt
+	}
 	return true
 }
-
-func (de *DummyEvent) Setup(customParams interface{}) bool {
-	fmt.Println("dummy setup")
+func (fae FetchAndExecEvent) Setup(customParams interface{}) bool {
+	fmt.Println("Fetch And Exec setup")
 	return true
 }
