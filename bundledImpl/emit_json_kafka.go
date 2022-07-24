@@ -53,14 +53,19 @@ func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) b
 		panic(err)
 	}
 	s := buf.String()
-
-	// send to kafka
-
-	kee.Producer.Produce(&kafka.Message{
+	fmt.Println("Kafka Emit about to send json="+s)
+		
+	err =kee.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &kee.Topic, Partition: kafka.PartitionAny},
 		Value:          []byte(s),
 	}, nil)
 
+	if err != nil {
+		fmt.Println("Could not send to kafka")
+		return false
+	}
+
+	
 	return true
 }
 
