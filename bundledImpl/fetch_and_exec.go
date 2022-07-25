@@ -21,47 +21,88 @@ package bundledImpl
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/ignalina/thund/api"
 	"io"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"text/template"
 )
 
 type FetchAndExecEvent struct {
-	destinationFolder string
+	DestinationFolder string
+	CmdTemplate       string
+	Data              map[string]interface{}
+	Tmpl              *template.Template
 }
 
-func (fae FetchAndExecEvent) Process(reader io.Reader, customParams interface{}) bool {
+func (fae *FetchAndExecEvent) Process(reader io.Reader, customParams interface{}) bool {
 	fmt.Println("Fetch And Exec Process")
 	// download whole file , do checksum , cal lines ,extract header/footer
-	fe :=customParams.( api.FileEntity)
+	fe := customParams.(api.FileEntity)
 
-	file, err := os.Open(fae.destinationFolder+fe.Name)
+	file, err := os.Open(filepath.Join(fae.DestinationFolder, filepath.Base(fe.Name)))
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer file.Close()
 
 	if !fe.HasLines {
-		io.Copy(file,reader)
+		io.Copy(file, reader)
+		file.Close()
 	} else {
 		var lineCnt int64
 		scanner := bufio.NewScanner(reader)
-		// optionally, resize scanner's capacity for lines over 64K, see next example
+
 		for scanner.Scan() {
 			file.Write([]byte(scanner.Text()))
-			lineCnt+=1
+			lineCnt += 1
 		}
 
 		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
 		}
-		fe.Lines=lineCnt
+
+		fe.Lines = lineCnt
 	}
+	fae.Data["path"] = fe.Name
+	buf := &bytes.Buffer{}
+	err = fae.Tmpl.Execute(buf, fae.Data)
+	if err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Command(buf.String())
+	data, err := cmd.Output()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for k, v := range data {
+		fmt.Printf("key :  %v, value :  %v \n", k, string(v))
+	}
+	// TODO remove fetched file.
 	return true
 }
-func (fae FetchAndExecEvent) Setup(customParams interface{}) bool {
+
+func (fae *FetchAndExecEvent) Setup(customParams interface{}) bool {
 	fmt.Println("Fetch And Exec setup")
+
+	jsonTemplate := fae.CmdTemplate
+
+	fae.Data = make(map[string]interface{}, 8)
+	fae.Tmpl = template.Must(template.New("command.tmpl").Parse(jsonTemplate))
+
+	fae.Data["traceid"] = "123"
+	fae.Data["linecount"] = "FilMeIn"
+	fae.Data["path"] = "FillMeIn"
+	fae.Data["sum"] = "FillMeIn"
+
+	// TODO Makesure destination directory exists or create it.
 	return true
 }

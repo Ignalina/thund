@@ -143,11 +143,10 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 	}
 
 	// remove all files that are done OR inside a exclude folder.
-	for k, v := range res_files {
-		if strings.HasSuffix(v.Name, ".done") {
+	for k, _ := range res_files {
+		if _, exists := res_files[k+".done"]; exists {
 			delete(res_files, k)
-		} else if _, exists := res_files[k+".done"]; exists {
-			delete(res_files, k)
+			delete(res_files, k+".done")
 		}
 	}
 	return res_files
