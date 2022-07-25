@@ -41,6 +41,7 @@ type S3 struct {
 	Password      string
 	Token         string
 	WatchFolder   string
+	ExcludeFolder string
 	GraceMilliSec int
 	MinioClient   *minio.Client
 	Ctx           context.Context
@@ -106,6 +107,7 @@ func NewS3() *S3 {
 		Password:      viper.GetString("s3.password"),
 		Token:         viper.GetString("s3.token"),
 		WatchFolder:   viper.GetString("s3.watchfolder"),
+		ExcludeFolder: viper.GetString("s3.excludefolder"),
 		GraceMilliSec: viper.GetInt("s3.gracemillisec"),
 	}
 	return &s3
@@ -132,7 +134,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 			return nil
 		}
 
-		if !strings.HasSuffix(object.Key, "/") {
+		if !strings.HasSuffix(object.Key, "/") && !strings.HasPrefix(object.Key, s3.ExcludeFolder) {
 			res_files[object.Key] = api.FileEntity{
 				Name: object.Key,
 				Size: object.Size,
@@ -140,7 +142,7 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 		}
 	}
 
-	// remove all files that are done.
+	// remove all files that are done OR inside a exclude folder.
 	for k, v := range res_files {
 		if strings.HasSuffix(v.Name, ".done") {
 			delete(res_files, k)
