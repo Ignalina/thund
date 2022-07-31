@@ -37,7 +37,7 @@ type StreamAndExecEvent struct {
 }
 
 func (sae *StreamAndExecEvent) Process(reader io.Reader, customParams interface{}) bool {
-	fmt.Println("Fetch And Exec Process")
+	fmt.Println("Stream And Exec Process")
 	// while streaming if configured do checksum , cal lines ,extract header/footer
 	fe := customParams.(api.FileEntity)
 	pipeReader, pipeWriter := io.Pipe()
