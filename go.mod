@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/confluentinc/confluent-kafka-go v1.9.1
 	github.com/minio/minio-go/v7 v7.0.31
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 )
 
@@ -13,6 +14,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.15.8 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.0 // indirect
