@@ -90,7 +90,7 @@ func (kee *KafkaEmitEvent) Setup(customParams interface{}) bool {
 	logger := log.New(os.Stdout, "kafka producer: ", 0)
 	kee.Producer = kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{viper.GetString("kafkaemit.bootstrap")},
-		Topic:   "kafkaemit.topic",
+		Topic:   viper.GetString("kafkaemit.topic"),
 		Logger:  logger,
 	})
 
