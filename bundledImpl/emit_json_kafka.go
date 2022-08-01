@@ -21,11 +21,13 @@ package bundledImpl
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/ignalina/thund/api"
+	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 	"io"
+	"log"
 	"os"
 	"text/template"
 )
@@ -33,15 +35,15 @@ import (
 type KafkaEmitEvent struct {
 	Data     map[string]interface{}
 	Tmpl     *template.Template
-	Producer *kafka.Producer
+	Producer *kafka.Writer
 	Topic    string
+	ctx      context.Context
 }
 
 func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) bool {
 
 	fmt.Println("Kafka Emit process")
 
-	//	var fe *api.FileEntity
 	fe := customParams.(*api.FileEntity)
 
 	kee.Data["name"] = fe.Name
@@ -52,20 +54,14 @@ func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) b
 	if err != nil {
 		panic(err)
 	}
-	s := buf.String()
-	fmt.Println("Kafka Emit about to send json="+s)
-		
-	err =kee.Producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &kee.Topic, Partition: kafka.PartitionAny},
-		Value:          []byte(s),
-	}, nil)
+	err = kee.Producer.WriteMessages(kee.ctx,
+		kafka.Message{
+			Key:   []byte(""),
+			Value: buf.Bytes()})
 
 	if err != nil {
-		fmt.Println("Could not send to kafka")
 		return false
 	}
-
-	
 	return true
 }
 
@@ -91,14 +87,20 @@ func (kee *KafkaEmitEvent) Setup(customParams interface{}) bool {
 	kee.Data["qualifiedname"] = "FillMeIn"
 	kee.Data["sum"] = "FillMeIn"
 
-	kee.Producer, err = kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafkaemit.bootstrap")})
+	logger := log.New(os.Stdout, "kafka producer: ", 0)
+	kee.Producer = kafka.NewWriter(kafka.WriterConfig{
+		Brokers: []string{viper.GetString("kafkaemit.bootstrap")},
+		Topic:   "kafkaemit.topic",
+		Logger:  logger,
+	})
+
+	kee.ctx = context.Background()
+
+	// Does a sanity check to get an early fail on faulty templates
+	err = kee.Tmpl.Execute(&bytes.Buffer{}, kee.Data)
 	if err != nil {
-		panic(err)
+		panic(err) //
 	}
-
-	//	defer kee.Producer.Close()
-
-	kee.Topic = viper.GetString("kafkaemit.topic")
 
 	return true
 }
