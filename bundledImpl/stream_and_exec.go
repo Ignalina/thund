@@ -24,6 +24,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ignalina/thund/api"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os/exec"
@@ -109,10 +110,10 @@ func (sae *StreamAndExecEvent) Process(reader io.Reader, customParams interface{
 func (sae *StreamAndExecEvent) Setup(customParams interface{}) bool {
 	fmt.Println("Fetch And Exec setup")
 
-	jsonTemplate := sae.CmdTemplate
+	sae.CmdTemplate = viper.GetString("streamcmd.template")
 
 	sae.Data = make(map[string]interface{}, 8)
-	sae.Tmpl = template.Must(template.New("command.tmpl").Parse(jsonTemplate))
+	sae.Tmpl = template.Must(template.New("cmd.tmpl").Parse(sae.CmdTemplate))
 
 	sae.Data["traceid"] = "123"
 	sae.Data["linecount"] = "FilMeIn"
