@@ -5,7 +5,7 @@ Whenever it is not feasible for an Apache Airflow / NIFI alike .
 Thund's aproach are modern and performant/robust processor/pipe allowing data in/out from storages like S3 or Iceberg/delta lakes without interruptions. Keep your NIFI/Airflow or Hadoop flying circus or even better throw them out and use Apache Arrows Balista/Datafusion in combination with Thund. 
 
 
-If dont get it , no worries its an early experiment , perhaps "Grímnismál" in the Poetic Edda explains it goal better  
+If you dont get it , no worries its an early experiment , perhaps "Grímnismál" in the Poetic Edda explains it goal better  
 *__"Thunda's waters hast'ning fleet,__*  
 *__Touch not Valgom! with thy feet."__*
 
