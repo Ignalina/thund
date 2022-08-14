@@ -5,7 +5,7 @@ Thunda's waters hast'ning fleet, Touch not Valgom! with thy feet.
 An minimalistic processor ,
 
 # Why ??
-Whenever you dont need/cant install Apache Airflow/
+Whenever it is not feasible for an full  Apache Airflow / NIFI
 
 ... under heavy prototyping, 
 
@@ -23,6 +23,7 @@ Goals below are to be sorted for V1,V2 or V never
 * Support for Arrows filesystem HDFS,
 * Incorporate RCLONE
 * Graph support
+* Callable from minifi
 
 ### Functional Goals V2
 
