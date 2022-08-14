@@ -1,11 +1,11 @@
-# Thund , modern processor based on Apache Arrow. 
+# Thund , modern processor based on Apache Arrow.
+A modern and performant/robust processor/pipe allowing data in/out from storages like S3 or Iceberg/delta lakes without interruptions.
 
 # Why ??
-Whenever it is not feasible for an Apache Airflow / NIFI alike . 
-Thund's aproach are modern and performant/robust processor/pipe allowing data in/out from storages like S3 or Iceberg/delta lakes without interruptions. Keep your NIFI/Airflow or Hadoop flying circus or even better throw them out and use Apache Arrows Balista/Datafusion in combination with Thund. 
+Whenever it is not feasible for an Apache Airflow / NIFI alike . Keep your NIFI/Airflow or Hadoop flying circus or even better throw them out and use Apache Arrows Balista/Datafusion in combination with Thund. 
 
 
-If you dont get it , no worries its an early experiment , perhaps "Grímnismál" in the Poetic Edda explains it goal better  
+If you dont get it , no worries its an early experiment , perhaps "Grímnismál" (Year 1300-1325) in the Poetic Edda explains it goal better  
 *__"Thunda's waters hast'ning fleet,__*  
 *__Touch not Valgom! with thy feet."__*
 
@@ -24,6 +24,8 @@ Goals below are to be sorted for V1,V2 or V never
 * Incorporate RCLONE
 * Graph support
 * Callable from minifi
+* Add handlers to Tantivy/Apache flight 
+* Add handlers Arrow -> Kafka
 
 ### Functional Goals V2
 
@@ -32,8 +34,6 @@ Goals below are to be sorted for V1,V2 or V never
 * Metrics
 * Static Deployment via ipmi
 * Deployment via kubernetes, as static as possible.
-
-### The name Thund
 
 
 ### Thund in the litterature
