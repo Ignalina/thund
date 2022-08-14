@@ -10,7 +10,7 @@ Whenever you dont need/cant install Apache Airflow/
 ... under heavy prototyping, 
 
 ### Design goals are robustness/performant/maintainable
-* Conform to  Brokkr's Software critera https://github.com/Ignalina/brokkr/blob/main/README.md
+* Conform to  Brokkr's Software critera https://github.com/Ignalina/brokkr
 * Apache Arrow centric
 * Minimalistic
 * No Moving parts 
