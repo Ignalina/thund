@@ -38,6 +38,6 @@ Goals below are to be sorted for V1,V2 or V never
 
 ### Thund in the litterature
 Translations poeems describing Thund [Germanic mytholigy](http://www.germanicmythology.com/PoeticEdda/GRM21.html)  
-Learn pronounce in Iceleandic [ÓÐSMÁL](https://odsmal.org/thund-thund-mythological-river)  
+Learn pronounce in Icelandic [ÓÐSMÁL](https://odsmal.org/thund-thund-mythological-river)  
 
 
