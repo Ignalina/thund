@@ -19,13 +19,13 @@ If you dont get it , no worries its an early experiment , perhaps "Grímnismál"
 Goals below are to be sorted for V1,V2 or V never
 
 ### Functional Goals  V1 
+* Picture of the watcher->eventhandlers mechanics and tossing of parameters.
 * Alloy component , Could Arrow references be used betwen Golang-Rust ?
 * Support for Arrows filesystem HDFS,
 * Incorporate RCLONE
 * Graph support
-* Callable from minifi
-* Add handlers to Tantivy/Apache flight 
-* Add handlers Arrow -> Kafka
+* Add handlers to Arrow->Tantivy/Apache flight/kafka/delta-rs
+* Handlers Deployable/Callable from minifi
 
 ### Functional Goals V2
 
