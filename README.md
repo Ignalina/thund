@@ -1,4 +1,4 @@
-# Thund , modern event driven processor based on Apache Arrow.
+# Thund , processor based on Apache Arrow.
 A modern and performant/robust processor/pipe allowing data in/out from storages like S3 or Iceberg/delta lakes without interruptions.
 
 # Why ??
