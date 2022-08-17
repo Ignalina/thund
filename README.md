@@ -18,8 +18,11 @@ If you dont get it , no worries its an early experiment , perhaps "Grímnismál"
 
 Goals below are to be sorted for V1,V2 or V never
 
-### Functional Goals  V1 
+### Functional Goals  V0
+* Fix eventhandler/step arguments from simple reader to functions for create reader and writer.
 * Picture of the watcher->eventhandlers mechanics and tossing of parameters.
+
+### Functional Goals  V1 
 * Alloy component , Could Arrow references be used betwen Golang-Rust ?
 * Support for Arrows filesystem HDFS,
 * Incorporate RCLONE
