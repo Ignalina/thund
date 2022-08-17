@@ -117,6 +117,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 func NewHDFS() *HDFS {
 	hdfs := HDFS{
 		Namenode:      viper.GetString("hdfs.namenode"),
+		User:          viper.GetString("hdfs.user"),
 		WatchFolder:   viper.GetString("hdfs.watchfolder"),
 		ExcludeFolder: viper.GetString("hdfs.excludefolder"),
 		GraceMilliSec: viper.GetInt("hdfs.gracemillisec"),
