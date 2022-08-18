@@ -27,6 +27,7 @@ import (
 	"github.com/colinmarc/hdfs/v2/hadoopconf"
 	"github.com/ignalina/thund/api"
 	"github.com/spf13/viper"
+	"path/filepath"
 	"log"
 	"net"
 	"os"
