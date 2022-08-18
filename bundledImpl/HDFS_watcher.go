@@ -142,7 +142,7 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 		}
 
 		res_files[object.Name()] = api.FileEntity{
-			Name: object.Name(),
+			Name:   filepath.Join(hdfsStruct.WatchFolder, object.Name()),
 			Size: object.Size(),
 		}
 	}
