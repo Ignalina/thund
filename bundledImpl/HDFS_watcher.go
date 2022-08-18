@@ -138,7 +138,7 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 
 	for _, object := range objectCh {
 
-		if object.IsDir() && strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) {
+		if object.IsDir() || strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) {
 			continue
 		}
 
