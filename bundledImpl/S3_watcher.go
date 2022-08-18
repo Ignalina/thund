@@ -49,7 +49,7 @@ type S3 struct {
 
 // Process all files , and for every sucessful process , add a ".done" file.
 
-func (s3 *S3) Watch(eventHandlers []api.IOEvent) bool {
+func (s3 *S3) Watch(eventHandlers []api.IOEvent) (bool, error) {
 	ctx := context.Background()
 	s3.initS3()
 	s3.Ctx = ctx
@@ -95,7 +95,7 @@ func (s3 *S3) Watch(eventHandlers []api.IOEvent) bool {
 		time.Sleep(time.Duration(s3.GraceMilliSec) * time.Millisecond)
 	}
 
-	return true
+	return true,nil
 }
 
 func NewS3() *S3 {
