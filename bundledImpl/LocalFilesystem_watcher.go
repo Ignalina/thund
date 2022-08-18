@@ -41,7 +41,7 @@ type LocalFilesystem struct {
 
 // Process all files , and for every sucessful process , add a ".done" file.
 
-func (lf *LocalFilesystem) Watch(eventHandlers []api.IOEvent) bool {
+func (lf *LocalFilesystem) Watch(eventHandlers []api.IOEvent) (bool, error) {
 	ctx := context.Background()
 	lf.Ctx = ctx
 	setupOk := true
@@ -86,7 +86,7 @@ func (lf *LocalFilesystem) Watch(eventHandlers []api.IOEvent) bool {
 		time.Sleep(time.Duration(lf.GraceMilliSec) * time.Millisecond)
 	}
 
-	return true
+	return true,nil
 }
 
 func NewLocalFilesystem() *LocalFilesystem {
