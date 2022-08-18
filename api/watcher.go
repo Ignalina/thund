@@ -20,5 +20,5 @@
 package api
 
 type Watcher interface {
-	Watch(event []IOEvent) bool
+	Watch(event []IOEvent) (bool, error)
 }
