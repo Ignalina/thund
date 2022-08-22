@@ -46,6 +46,8 @@ func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) b
 
 	fe := customParams.(*api.FileEntity)
 
+	kee.Data["header"] = fe.Header
+	kee.Data["footer"] = fe.Footer
 	kee.Data["name"] = fe.Name
 	kee.Data["filesize"] = fe.Size
 
@@ -78,6 +80,8 @@ func (kee *KafkaEmitEvent) Setup(customParams interface{}) bool {
 	kee.Data = make(map[string]interface{}, 8)
 	kee.Tmpl = template.Must(template.New("kafkaemit.tmpl").Parse(jsonTemplate))
 
+	kee.Data["header"] = "FillMeIn"
+	kee.Data["footer"] = "FillMeIn"
 	kee.Data["traceid"] = "123"
 	kee.Data["createtime"] = "123"
 	kee.Data["linecount"] = "FilMeIn"
