@@ -27,10 +27,10 @@ import (
 	"github.com/colinmarc/hdfs/v2/hadoopconf"
 	"github.com/ignalina/thund/api"
 	"github.com/spf13/viper"
-	"path/filepath"
 	"log"
 	"net"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -143,7 +143,7 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 		}
 
 		res_files[object.Name()] = api.FileEntity{
-			Name:   filepath.Join(hdfsStruct.WatchFolder, object.Name()),
+			Name: path.Join(hdfsStruct.WatchFolder, object.Name()),
 			Size: object.Size(),
 		}
 	}

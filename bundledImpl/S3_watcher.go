@@ -27,6 +27,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
 	"log"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -95,7 +96,7 @@ func (s3 *S3) Watch(eventHandlers []api.IOEvent) (bool, error) {
 		time.Sleep(time.Duration(s3.GraceMilliSec) * time.Millisecond)
 	}
 
-	return true,nil
+	return true, nil
 }
 
 func NewS3() *S3 {
@@ -184,6 +185,6 @@ func (s3 S3) GetFilteredFileSet(filter string, minioClient *minio.Client) map[st
 
 // extension example strconv.Itoa(key)+."parquet"
 func FullDestinPath(destDir string, fullSourcePath string, extension string) string {
-	destinName := filepath.Join(destDir, filepath.Base(fullSourcePath)+"_"+extension)
+	destinName := path.Join(destDir, filepath.Base(fullSourcePath)+"_"+extension)
 	return destinName
 }
