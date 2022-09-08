@@ -42,6 +42,7 @@ type S3 struct {
 	Password      string
 	Token         string
 	WatchFolder   string
+	MarkerFolder  string
 	ExcludeFolder string
 	GraceMilliSec int
 	MinioClient   *minio.Client
@@ -108,6 +109,7 @@ func NewS3() *S3 {
 		Password:      viper.GetString("s3.password"),
 		Token:         viper.GetString("s3.token"),
 		WatchFolder:   viper.GetString("s3.watchfolder"),
+		MarkerFolder:  viper.GetString("s3.markerfolder"),
 		ExcludeFolder: viper.GetString("s3.excludefolder"),
 		GraceMilliSec: viper.GetInt("s3.gracemillisec"),
 	}
@@ -120,16 +122,23 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 
 	defer cancel()
 
-	objectCh := minioClient.ListObjects(ctx, s3.BucketName, minio.ListObjectsOptions{
+	watchDir := minioClient.ListObjects(ctx, s3.BucketName, minio.ListObjectsOptions{
 		WithVersions: false,
 		WithMetadata: true,
 		Recursive:    true,
 		Prefix:       s3.WatchFolder,
 	})
 
+	markerDir := minioClient.ListObjects(ctx, s3.BucketName, minio.ListObjectsOptions{
+		WithVersions: false,
+		WithMetadata: true,
+		Recursive:    true,
+		Prefix:       s3.MarkerFolder,
+	})
+
 	res_files := make(map[string]api.FileEntity)
 
-	for object := range objectCh {
+	for object := range watchDir {
 		if object.Err != nil {
 			fmt.Println(object.Err)
 			return nil
@@ -143,9 +152,25 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 		}
 	}
 
+	marker_files := make(map[string]api.FileEntity)
+
+	for object := range markerDir {
+		if object.Err != nil {
+			fmt.Println(object.Err)
+			return nil
+		}
+
+		if !strings.HasSuffix(object.Key, "/") && !strings.HasPrefix(object.Key, s3.ExcludeFolder) {
+			marker_files[object.Key] = api.FileEntity{
+				Name: object.Key,
+				Size: object.Size,
+			}
+		}
+	}
+
 	// remove all files that are done OR inside a exclude folder.
 	for k, _ := range res_files {
-		if _, exists := res_files[k+".done"]; exists {
+		if _, exists := marker_files[k+".done"]; exists {
 			delete(res_files, k)
 			delete(res_files, k+".done")
 		}

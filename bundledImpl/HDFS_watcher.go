@@ -39,6 +39,7 @@ import (
 type HDFS struct {
 	Namenode      string
 	WatchFolder   string
+	MarkerFolder  string
 	ExcludeFolder string
 	GraceMilliSec int
 	HDFSClient    *hdfs.Client
@@ -120,6 +121,7 @@ func NewHDFS() *HDFS {
 		Namenode:      viper.GetString("hdfs.namenode"),
 		User:          viper.GetString("hdfs.user"),
 		WatchFolder:   viper.GetString("hdfs.watchfolder"),
+		MarkerFolder:  viper.GetString("hdfs.markerfolder"),
 		ExcludeFolder: viper.GetString("hdfs.excludefolder"),
 		GraceMilliSec: viper.GetInt("hdfs.gracemillisec"),
 	}
@@ -128,15 +130,19 @@ func NewHDFS() *HDFS {
 
 func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 
-	objectCh, err := hdfsStruct.HDFSClient.ReadDir(hdfsStruct.WatchFolder)
+	watchDir, err := hdfsStruct.HDFSClient.ReadDir(hdfsStruct.WatchFolder)
+	if nil != err {
+		return nil, err
+	}
 
+	markerDir, err := hdfsStruct.HDFSClient.ReadDir(hdfsStruct.MarkerFolder)
 	if nil != err {
 		return nil, err
 	}
 
 	res_files := make(map[string]api.FileEntity)
 
-	for _, object := range objectCh {
+	for _, object := range watchDir {
 
 		if object.IsDir() || strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) {
 			continue
@@ -148,12 +154,27 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 		}
 	}
 
+	marker_files := make(map[string]api.FileEntity)
+	for _, object := range markerDir {
+
+		if object.IsDir() || strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) || !strings.HasSuffix(object.Name(), ".done") {
+			continue
+		}
+
+		marker_files[object.Name()] = api.FileEntity{
+			Name: path.Join(hdfsStruct.WatchFolder, object.Name()),
+			Size: object.Size(),
+		}
+	}
+
 	// remove all files that are done OR inside a exclude folder.
 	for k, _ := range res_files {
-		if _, exists := res_files[k+".done"]; exists {
+
+		if _, exists := marker_files[k+".done"]; exists {
 			delete(res_files, k)
 			delete(res_files, k+".done")
 		}
+
 	}
 	return res_files, nil
 }
