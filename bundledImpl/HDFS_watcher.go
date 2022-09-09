@@ -95,8 +95,8 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 				dummyFile := "Dummy file"
 				dummyFileName := fileEntity.Name + ".done"
 
-				//dummyFileName=bundledImpl.FullDestinPath(hdfsStruct.Markerfolder, fullpath, extension)
-				dummyFileName=path.Join(hdfsStruct.Markerfolder, path.Base(fileEntity.Name))+".done"
+				//dummyFileName=bundledImpl.FullDestinPath(hdfsStruct.MarkerFolder, fullpath, extension)
+				dummyFileName=path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name))+".done"
 				log.Printf("planned Markerfilename="+dummyFileName)
 				writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
 				if nil != err {
