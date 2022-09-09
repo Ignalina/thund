@@ -62,6 +62,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			return false, nil
 		}
 	}
+	log.Println("HDFS watcher sucessfully set up all handlers")
 
 	for true {
 
@@ -83,21 +84,21 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			defer o.Close()
 			//			return ioutil.ReadAll(o)
 
-			for _, handler := range eventHandlers {
-				sucess := handler.Process(o, &fileEntity)
+			for index, handler := range eventHandlers {
+				sucess = handler.Process(o, &fileEntity)
 				if !sucess {
+					log.Println("Handler " + strconv.Itoa(index) + " step return failure. Will not do more steps and no .done file")
+					o.Close()
 					break
 				}
-
 			}
 
 			if sucess { // create a marker file with original file name + ".done"
 				dummyFile := "Dummy file"
 				dummyFileName := fileEntity.Name + ".done"
 
-				//dummyFileName=bundledImpl.FullDestinPath(hdfsStruct.MarkerFolder, fullpath, extension)
-				dummyFileName=path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name))+".done"
-				log.Printf("planned Markerfilename="+dummyFileName)
+				dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".done"
+				log.Printf("planned Markerfilename=" + dummyFileName)
 				writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
 				if nil != err {
 					return false, err
