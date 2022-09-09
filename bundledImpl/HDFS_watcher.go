@@ -68,7 +68,9 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 
 		fileEntityMap, err := hdfsStruct.ListFiles()
 		if nil != err {
-			return false, err
+			log.Println("HDFS watcher could not list files due to " + err.Error())
+			time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * 10000)
+			continue
 		}
 
 		for _, fileEntity := range fileEntityMap {
