@@ -69,6 +69,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 		fileEntityMap, err := hdfsStruct.ListFiles()
 		if nil != err {
 			log.Println("HDFS watcher could not list files due to " + err.Error())
+			hdfsStruct.FindWorkingNamenode()
 			time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * 10000)
 			continue
 		}
@@ -185,16 +186,34 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 	return res_files, nil
 }
 
-func (hdfsStruct *HDFS) initHDFS() *hdfs.Client {
-	//	ctx := context.Background()
+func (hdfsStruct *HDFS) FindWorkingNamenode() {
+	hdfsStruct.HDFSClient.Open(hdfsStruct.WatchFolder)
 	var err error
-	hdfsStruct.HDFSClient, err = GetClient(hdfsStruct.Namenode, hdfsStruct.User)
 
-	if err != nil {
-		log.Fatalln(err)
+	nameNodes := strings.Split(hdfsStruct.Namenode, ",")
+	fmt.Println(nameNodes)
+	for _, nameNode := range nameNodes {
+		hdfsStruct.HDFSClient, err = GetClient(nameNode, hdfsStruct.User)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		fr, er := hdfsStruct.HDFSClient.Open(hdfsStruct.WatchFolder)
+		if er != nil {
+			log.Println("Could not access watchfolder.." + er.Error())
+			continue
+		}
+		fr.Close()
+		break
 	}
 
-	log.Printf("%#v\n", hdfsStruct.HDFSClient) // hdfsClient is now set up
+}
+
+func (hdfsStruct *HDFS) initHDFS() *hdfs.Client {
+	//	ctx := context.Background()
+
+	log.Printf("Setting up hdfs client , looking for ", hdfsStruct.HDFSClient) // hdfsClient is now set up
+	hdfsStruct.FindWorkingNamenode()
 	return hdfsStruct.HDFSClient
 }
 
