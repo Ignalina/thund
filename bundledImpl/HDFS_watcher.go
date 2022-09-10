@@ -70,7 +70,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 		if nil != err {
 			log.Println("HDFS watcher could not list files due to " + err.Error())
 			hdfsStruct.FindWorkingNamenode()
-			time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * 10000)
+			time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond * 10)
 			continue
 		}
 
@@ -195,17 +195,19 @@ func (hdfsStruct *HDFS) FindWorkingNamenode() {
 	for _, nameNode := range nameNodes {
 		hdfsStruct.HDFSClient, err = GetClient(nameNode, hdfsStruct.User)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println("Error getting hdfs client for namenode=" + nameNode + " err=" + err.Error())
+			continue
 		}
 
 		fr, er := hdfsStruct.HDFSClient.Open(hdfsStruct.WatchFolder)
 		if er != nil {
-			log.Println("Could not access watchfolder.." + er.Error())
+			log.Println("Could not access watchfolder for nameNode=" + nameNode + " err=" + er.Error())
 			continue
 		}
 		fr.Close()
 		break
 	}
+	// Todo very bad construct , might leave without working namenode
 
 }
 
