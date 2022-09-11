@@ -187,7 +187,6 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 }
 
 func (hdfsStruct *HDFS) FindWorkingNamenode() {
-	hdfsStruct.HDFSClient.Open(hdfsStruct.WatchFolder)
 	var err error
 
 	nameNodes := strings.Split(hdfsStruct.Namenode, ",")
