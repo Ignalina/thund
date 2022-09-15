@@ -95,6 +95,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 					break
 				}
 			}
+			o.Close()
 
 			if sucess { // create a marker file with original file name + ".done"
 				dummyFile := "Dummy file"

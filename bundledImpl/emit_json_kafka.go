@@ -50,7 +50,10 @@ func (kee *KafkaEmitEvent) Process(reader io.Reader, customParams interface{}) b
 	kee.Data["footer"] = fe.Footer
 	kee.Data["name"] = fe.Name
 	kee.Data["filesize"] = fe.Size
-
+	kee.Data["linecount"] = fe.Lines
+	if nil != fe.Sum {
+		kee.Data["sum"] = fe.Sum
+	}
 	buf := &bytes.Buffer{}
 	err := kee.Tmpl.Execute(buf, kee.Data)
 	if err != nil {
