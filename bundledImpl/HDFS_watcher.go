@@ -74,10 +74,10 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			continue
 		}
 
-		for _, fileEntity := range fileEntityMap {
+		keys := api.SortOnAge(fileEntityMap)
 
-			//	setupOk := event.Setup()
-			//			o, _ := hdfsStruct.HDFSClient.ReadFile(fileEntity.Name)
+		for _, k := range keys {
+			fileEntity := fileEntityMap[k]
 			var sucess bool = true
 			o, err := hdfsStruct.HDFSClient.Open(fileEntity.Name)
 			if err != nil {
@@ -85,7 +85,6 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			}
 
 			defer o.Close()
-			//			return ioutil.ReadAll(o)
 
 			for index, handler := range eventHandlers {
 				sucess = handler.Process(o, &fileEntity)
@@ -157,8 +156,9 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 		}
 
 		res_files[object.Name()] = api.FileEntity{
-			Name: path.Join(hdfsStruct.WatchFolder, object.Name()),
-			Size: object.Size(),
+			Name:      path.Join(hdfsStruct.WatchFolder, object.Name()),
+			UnixMilli: object.ModTime().UnixMilli(),
+			Size:      object.Size(),
 		}
 	}
 

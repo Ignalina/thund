@@ -19,8 +19,11 @@
 
 package api
 
+import "sort"
+
 type FileEntity struct {
 	Name      string
+	UnixMilli int64
 	Size      int64
 	Lines     int64
 	Sum       []byte
@@ -32,4 +35,16 @@ type FileEntity struct {
 	HasSum    bool
 	HasHeader bool
 	HasFooter bool
+}
+
+func SortOnAge(fileEntityMap map[string]FileEntity) []string {
+	keys := make([]string, 0, len(fileEntityMap))
+	for k := range fileEntityMap {
+		keys = append(keys, k)
+	}
+
+	sort.SliceStable(keys, func(i, j int) bool {
+		return fileEntityMap[keys[i]].UnixMilli < fileEntityMap[keys[j]].UnixMilli
+	})
+	return keys
 }

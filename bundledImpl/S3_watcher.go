@@ -68,7 +68,9 @@ func (s3 *S3) Watch(eventHandlers []api.IOEvent) (bool, error) {
 	for setupOk {
 
 		fileEntityMap := s3.ListFiles(s3.MinioClient)
-		for _, fileEntity := range fileEntityMap {
+		keys := api.SortOnAge(fileEntityMap)
+		for _, k := range keys {
+			fileEntity := fileEntityMap[k]
 
 			opts := minio.GetObjectOptions{}
 
@@ -162,8 +164,9 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 
 		if !strings.HasSuffix(object.Key, "/") && !strings.HasPrefix(object.Key, s3.ExcludeFolder) {
 			marker_files[object.Key] = api.FileEntity{
-				Name: object.Key,
-				Size: object.Size,
+				Name:      object.Key,
+				UnixMilli: object.LastModified.UnixMilli(),
+				Size:      object.Size,
 			}
 		}
 	}
