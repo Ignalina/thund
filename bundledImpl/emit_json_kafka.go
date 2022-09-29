@@ -29,6 +29,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -95,8 +96,12 @@ func (kee *KafkaEmitEvent) Setup(customParams interface{}) bool {
 	kee.Data["sum"] = "FillMeIn"
 
 	logger := log.New(os.Stdout, "kafka producer: ", 0)
+
+	bootstrap := viper.GetString("kafkaemit.bootstrap")
+	brokers := strings.Split(bootstrap, ",")
+
 	kee.Producer = kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{viper.GetString("kafkaemit.bootstrap")},
+		Brokers: brokers,
 		Topic:   viper.GetString("kafkaemit.topic"),
 		Logger:  logger,
 	})
