@@ -62,7 +62,7 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			return false, nil
 		}
 	}
-	log.Println("HDFS watcher sucessfully set up all handlers")
+	log.Println("HDFS watcher v2022-10-11 sucessfully set up all handlers")
 
 	for true {
 
@@ -240,7 +240,7 @@ func (hdfsStruct HDFS) GetFilteredFileSet(filter string) map[string]int64 {
 // TODO use https://github.com/deckarep/golang-set
 func (hdfsStruct *HDFS) FilterListFiles() (map[string]api.FileEntity, error) {
 
-	var filteredFileEntityMap map[string]api.FileEntity
+	filteredFileEntityMap := make(map[string]api.FileEntity)
 
 	prevFileEntityMap, err := hdfsStruct.ListFiles()
 	if nil != err {
