@@ -89,30 +89,33 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			for index, handler := range eventHandlers {
 				sucess = handler.Process(o, &fileEntity)
 				if !sucess {
-					log.Println("Handler " + strconv.Itoa(index) + " step return failure. Will not do more steps and no .done file")
+					log.Println("Handler " + strconv.Itoa(index) + " step return failure. Will not do more steps and place .ignore file")
 					o.Close()
 					break
 				}
 			}
 			o.Close()
 
-			if sucess { // create a marker file with original file name + ".done"
-				dummyFile := "Dummy file"
-				dummyFileName := fileEntity.Name + ".done"
+			// create a marker file with original file name + ".done" | ".igore"
 
+			var dummyFileName string
+			if (sucess) {
 				dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".done"
-				log.Printf("planned Markerfilename=" + dummyFileName)
-				writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
-				if nil != err {
-					return false, err
-				}
+			} else {
+				dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".ignore"
+			}
 
-				_, err = writer.Write([]byte(dummyFile))
+			dummyFile := "Dummy file"
+			log.Printf("planned Markerfilename=" + dummyFileName)
+			writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
+			if nil != err {
+				return false, err
+			}
 
-				if nil != err {
-					return false, err
-				}
+			_, err = writer.Write([]byte(dummyFile))
 
+			if nil != err {
+				return false, err
 			}
 
 		}
@@ -165,7 +168,7 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 	marker_files := make(map[string]api.FileEntity)
 	for _, object := range markerDir {
 
-		if object.IsDir() || strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) || !strings.HasSuffix(object.Name(), ".done") {
+		if object.IsDir() || strings.HasPrefix(object.Name(), hdfsStruct.ExcludeFolder) || !strings.HasSuffix(object.Name(), ".done") || !strings.HasSuffix(object.Name(), ".ignore") {
 			continue
 		}
 
@@ -181,6 +184,11 @@ func (hdfsStruct HDFS) ListFiles() (map[string]api.FileEntity, error) {
 		if _, exists := marker_files[k+".done"]; exists {
 			delete(res_files, k)
 			delete(res_files, k+".done")
+		}
+
+		if _, exists := marker_files[k+".ignore"]; exists {
+			delete(res_files, k)
+			delete(res_files, k+".ignore")
 		}
 
 	}

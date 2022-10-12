@@ -86,13 +86,19 @@ func (s3 *S3) Watch(eventHandlers []api.IOEvent) (bool, error) {
 
 			}
 
-			if sucess { // create a marker file with original file name + ".done"
-				dummyFile := "Dummy file"
-				dummyFileName := fileEntity.Name + ".done"
+			// create a marker file with original file name + ".done" | ".igore"
 
-				myReader := strings.NewReader(dummyFile)
-				s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
+			var dummyFileName string
+			if (sucess) {
+				dummyFileName = fileEntity.Name + ".done"
+			} else {
+				dummyFileName = fileEntity.Name + ".ignore"
 			}
+
+			dummyFile := "Dummy file"
+
+			myReader := strings.NewReader(dummyFile)
+			s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 
 		}
 
@@ -177,6 +183,11 @@ func (s3 S3) ListFiles(minioClient *minio.Client) map[string]api.FileEntity {
 			delete(res_files, k)
 			delete(res_files, k+".done")
 		}
+		if _, exists := marker_files[k+".ignore"]; exists {
+			delete(res_files, k)
+			delete(res_files, k+".ignore")
+		}
+
 	}
 	return res_files
 }
