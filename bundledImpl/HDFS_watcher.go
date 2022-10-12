@@ -62,11 +62,11 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 			return false, nil
 		}
 	}
-	log.Println("HDFS watcher sucessfully set up all handlers")
+	log.Println("HDFS watcher v2022-10-11 sucessfully set up all handlers")
 
 	for true {
 
-		fileEntityMap, err := hdfsStruct.ListFiles()
+		fileEntityMap, err := hdfsStruct.FilterListFiles()
 		if nil != err {
 			log.Println("HDFS watcher could not list files due to " + err.Error())
 			hdfsStruct.FindWorkingNamenode()
@@ -120,7 +120,6 @@ func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
 
 		}
 
-		time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond)
 	}
 
 	return true, nil
@@ -244,6 +243,38 @@ func (hdfsStruct HDFS) GetFilteredFileSet(filter string) map[string]int64 {
 	}
 
 	return m
+}
+
+// TODO use https://github.com/deckarep/golang-set
+func (hdfsStruct *HDFS) FilterListFiles() (map[string]api.FileEntity, error) {
+
+	filteredFileEntityMap := make(map[string]api.FileEntity)
+
+	prevFileEntityMap, err := hdfsStruct.ListFiles()
+	if nil != err {
+		log.Println("HDFS watcher could not list files due to " + err.Error())
+		hdfsStruct.FindWorkingNamenode()
+		time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond * 10)
+		return nil, err
+	}
+
+	time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond)
+
+	fileEntityMap, err := hdfsStruct.ListFiles()
+	if nil != err {
+		log.Println("HDFS watcher could not list files due to " + err.Error())
+		hdfsStruct.FindWorkingNamenode()
+		time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond * 10)
+		return nil, err
+	}
+
+	for prevKey, prevEnt := range prevFileEntityMap {
+		if ent, ok := fileEntityMap[prevKey]; ok && prevEnt.Size == ent.Size {
+			filteredFileEntityMap[prevKey] = ent
+		}
+	}
+
+	return filteredFileEntityMap, nil
 }
 
 var cachedClients map[string]*hdfs.Client = make(map[string]*hdfs.Client)
