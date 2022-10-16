@@ -1,5 +1,5 @@
-# Thund , processor based on Apache Arrow.
-A modern and performant/robust processor/pipe allowing data in/out from storages like S3 or Iceberg/delta lakes without interruptions.
+# Thund , DAG processor based on Apache Arrow.
+A modern and performant/robust dag processor for data pipelines allowing processing data in/out from storages like S3 or Iceberg/delta lakes without interruptions.
 
 # Why ??
 Whenever it is not feasible for an Apache Airflow / NIFI / Hadoop flying circus alike. Legacy software could remain operating on your storage/lake data in conjunction with Thund handling In/Out.  For a complete modern stack combine Apache Arrows Balista/Datafusion in combination with Thund.   
