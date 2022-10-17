@@ -53,6 +53,9 @@ func (de *CsvToDelta) Process(reader io.Reader, customParams interface{}) bool {
 
 	fmt.Printf("[Go]\tCalling the goBridge with:\n\tarr: %v\n", listOfarrays)
 
+	//
+	// !!! Envision the above arrays are read from a CSV , and we now call an rust.rs based step via alloy !!!
+	//
 	goBridge := api.GoBridge{GoAllocator: mem}
 	i, err := goBridge.From_chunks(listOfarrays)
 
