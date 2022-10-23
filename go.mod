@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/apache/arrow/go/v9 v9.0.0
 	github.com/colinmarc/hdfs/v2 v2.3.0
-	github.com/ignalina/alloy v0.0.7
+	github.com/ignalina/alloy v0.0.8
 	github.com/minio/minio-go/v7 v7.0.34
 	github.com/segmentio/kafka-go v0.4.34
 	github.com/spf13/viper v1.12.0
