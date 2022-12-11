@@ -19,6 +19,7 @@
 
 package api
 
-type Watcher interface {
-	Watch(event []IOEvent) (bool, error)
+type NodeProcessor interface {
+	Setup() error
+	Process() error
 }

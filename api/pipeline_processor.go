@@ -19,12 +19,17 @@
 
 package api
 
-type Processor struct {
-	IOEventImpl []IOEvent
-	WatcherImpl Watcher
+type PipelineProcessor struct {
+	IOEventImpl   []IOEvent
+	ProcessorImpl NodeProcessor
 }
 
-func (fa Processor) Start() {
-	fa.WatcherImpl.Watch(fa.IOEventImpl)
+func (fa PipelineProcessor) Setup() error {
+	fa.ProcessorImpl.Setup()
+	return nil
+}
 
+func (fa PipelineProcessor) Process() error {
+	fa.ProcessorImpl.Process()
+	return nil
 }

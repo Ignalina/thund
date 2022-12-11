@@ -47,65 +47,72 @@ type S3 struct {
 	GraceMilliSec int
 	MinioClient   *minio.Client
 	Ctx           context.Context
+	eventHandlers []api.IOEvent
 }
 
-// Process all files , and for every sucessful process , add a ".done" file.
-
-func (s3 *S3) Watch(eventHandlers []api.IOEvent) (bool, error) {
+func (s3 *S3) Setup() error {
 	ctx := context.Background()
 	s3.initS3()
 	s3.Ctx = ctx
 	s3.MinioClient.IsOnline()
 	setupOk := true
 
-	for index, handler := range eventHandlers {
+	for index, handler := range s3.eventHandlers {
 		setupOk = handler.Setup(s3)
 		if !setupOk {
 			log.Fatalln("Failed setup eventHandler nr " + strconv.Itoa(index))
+			// todo return error
 		}
 	}
+	return nil
+}
 
-	for setupOk {
+// Process all files , and for every sucessful process , add a ".done" file.
 
-		fileEntityMap := s3.ListFiles(s3.MinioClient)
-		keys := api.SortOnAge(fileEntityMap)
-		for _, k := range keys {
-			fileEntity := fileEntityMap[k]
+func (s3 *S3) Process() error {
+	ctx := context.Background()
+	s3.initS3()
+	s3.Ctx = ctx
+	s3.MinioClient.IsOnline()
 
-			opts := minio.GetObjectOptions{}
+	fileEntityMap := s3.ListFiles(s3.MinioClient)
+	keys := api.SortOnAge(fileEntityMap)
+	for _, k := range keys {
+		fileEntity := fileEntityMap[k]
 
-			//	setupOk := event.Setup()
-			o, _ := s3.MinioClient.GetObject(ctx, s3.BucketName, fileEntity.Name, opts)
-			var sucess bool = true
+		opts := minio.GetObjectOptions{}
 
-			for _, handler := range eventHandlers {
-				sucess := handler.Process(o, &fileEntity)
-				if !sucess {
-					break
-				}
+		//	setupOk := event.Setup()
+		o, _ := s3.MinioClient.GetObject(ctx, s3.BucketName, fileEntity.Name, opts)
+		var sucess bool = true
 
+		for _, handler := range s3.eventHandlers {
+			sucess := handler.Process(o, &fileEntity)
+			if !sucess {
+				break
 			}
-
-			// create a marker file with original file name + ".done" | ".igore"
-
-			var dummyFileName string
-			if (sucess) {
-				dummyFileName = fileEntity.Name + ".done"
-			} else {
-				dummyFileName = fileEntity.Name + ".ignore"
-			}
-
-			dummyFile := "Dummy file"
-
-			myReader := strings.NewReader(dummyFile)
-			s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
 
 		}
 
-		time.Sleep(time.Duration(s3.GraceMilliSec) * time.Millisecond)
+		// create a marker file with original file name + ".done" | ".igore"
+
+		var dummyFileName string
+		if sucess {
+			dummyFileName = fileEntity.Name + ".done"
+		} else {
+			dummyFileName = fileEntity.Name + ".ignore"
+		}
+
+		dummyFile := "Dummy file"
+
+		myReader := strings.NewReader(dummyFile)
+		s3.MinioClient.PutObject(s3.Ctx, s3.BucketName, dummyFileName, myReader, int64(len(dummyFile)), minio.PutObjectOptions{ContentType: "application/text"})
+
 	}
 
-	return true, nil
+	time.Sleep(time.Duration(s3.GraceMilliSec) * time.Millisecond)
+
+	return nil
 }
 
 func NewS3() *S3 {

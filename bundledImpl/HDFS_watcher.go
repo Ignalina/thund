@@ -45,84 +45,87 @@ type HDFS struct {
 	HDFSClient    *hdfs.Client
 	Ctx           context.Context
 	User          string
+	eventHandlers []api.IOEvent
 }
 
 // Process all files , and for every sucessful process , add a ".done" file.
-
-func (hdfsStruct *HDFS) Watch(eventHandlers []api.IOEvent) (bool, error) {
+func (hdfsStruct *HDFS) Setup() error {
 	ctx := context.Background()
 	hdfsStruct.initHDFS()
 	hdfsStruct.Ctx = ctx
 	setupOk := true
 
-	for index, handler := range eventHandlers {
+	for index, handler := range hdfsStruct.eventHandlers {
 		setupOk = handler.Setup(hdfsStruct)
 		if !setupOk {
 			log.Fatalln("Failed setup eventHandler nr " + strconv.Itoa(index))
-			return false, nil
+			return nil // TODO return error !
 		}
 	}
 	log.Println("HDFS watcher v2022-10-11 sucessfully set up all handlers")
+	return nil
+}
 
-	for true {
+func (hdfsStruct *HDFS) Process() error {
+	ctx := context.Background()
+	hdfsStruct.initHDFS()
+	hdfsStruct.Ctx = ctx
 
-		fileEntityMap, err := hdfsStruct.FilterListFiles()
-		if nil != err {
-			log.Println("HDFS watcher could not list files due to " + err.Error())
-			hdfsStruct.FindWorkingNamenode()
-			time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond * 10)
-			continue
+	fileEntityMap, err := hdfsStruct.FilterListFiles()
+	if nil != err {
+		log.Println("HDFS watcher could not list files due to " + err.Error())
+		hdfsStruct.FindWorkingNamenode()
+		time.Sleep(time.Duration(hdfsStruct.GraceMilliSec) * time.Millisecond * 10)
+		return nil
+	}
+
+	keys := api.SortOnAge(fileEntityMap)
+
+	for _, k := range keys {
+		fileEntity := fileEntityMap[k]
+		var sucess bool = true
+		o, err := hdfsStruct.HDFSClient.Open(fileEntity.Name)
+		if err != nil {
+			return err
 		}
 
-		keys := api.SortOnAge(fileEntityMap)
+		defer o.Close()
 
-		for _, k := range keys {
-			fileEntity := fileEntityMap[k]
-			var sucess bool = true
-			o, err := hdfsStruct.HDFSClient.Open(fileEntity.Name)
-			if err != nil {
-				return false, err
+		for index, handler := range hdfsStruct.eventHandlers {
+			sucess = handler.Process(o, &fileEntity)
+			if !sucess {
+				log.Println("Handler " + strconv.Itoa(index) + " step return failure. Will not do more steps and place .ignore file")
+				o.Close()
+				break
 			}
+		}
+		o.Close()
 
-			defer o.Close()
+		// create a marker file with original file name + ".done" | ".igore"
 
-			for index, handler := range eventHandlers {
-				sucess = handler.Process(o, &fileEntity)
-				if !sucess {
-					log.Println("Handler " + strconv.Itoa(index) + " step return failure. Will not do more steps and place .ignore file")
-					o.Close()
-					break
-				}
-			}
-			o.Close()
+		var dummyFileName string
+		if sucess {
+			dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".done"
+		} else {
+			dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".ignore"
+		}
 
-			// create a marker file with original file name + ".done" | ".igore"
+		dummyFile := "Dummy file"
+		log.Printf("planned Markerfilename=" + dummyFileName)
+		writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
+		if nil != err {
+			return err
+		}
 
-			var dummyFileName string
-			if (sucess) {
-				dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".done"
-			} else {
-				dummyFileName = path.Join(hdfsStruct.MarkerFolder, path.Base(fileEntity.Name)) + ".ignore"
-			}
+		_, err = writer.Write([]byte(dummyFile))
 
-			dummyFile := "Dummy file"
-			log.Printf("planned Markerfilename=" + dummyFileName)
-			writer, err := hdfsStruct.HDFSClient.Create(dummyFileName)
-			if nil != err {
-				return false, err
-			}
-
-			_, err = writer.Write([]byte(dummyFile))
-
-			if nil != err {
-				return false, err
-			}
-
+		if nil != err {
+			return err
 		}
 
 	}
 
-	return true, nil
+	return nil
 }
 
 func NewHDFS() *HDFS {
