@@ -6,5 +6,5 @@ type DAG struct {
 
 type DAGNode struct {
 	//	out               []DAGNode
-	pipelineProcessor PipelineProcessor
+	PipelineProcessor PipelineProcessor
 }
