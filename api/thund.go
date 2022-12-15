@@ -1,6 +1,6 @@
 package api
 
 type Thund interface {
-	Deploy(DAG) error
+	Deploy(dag DAG, customParams interface{}) error
 	Start() error
 }

@@ -49,7 +49,7 @@ type HDFS struct {
 }
 
 // Process all files , and for every sucessful process , add a ".done" file.
-func (hdfsStruct *HDFS) Setup() error {
+func (hdfsStruct *HDFS) Setup(customParams interface{}) error {
 	ctx := context.Background()
 	hdfsStruct.initHDFS()
 	hdfsStruct.Ctx = ctx

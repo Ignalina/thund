@@ -14,11 +14,11 @@ type ThundLocal struct {
 	dagProcessor api.DAG
 }
 
-func (tl ThundLocal) Deploy(dag api.DAG) error {
+func (tl ThundLocal) Deploy(dag api.DAG,customParams interface{}) error {
 
 	tl.dagProcessor = dag
 	for _, dp := range tl.dagProcessor.Nodes {
-		dp.PipelineProcessor.Setup()
+		dp.PipelineProcessor.Setup(customParams)
 	}
 
 	return nil

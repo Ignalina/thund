@@ -24,8 +24,8 @@ type PipelineProcessor struct {
 	ProcessorImpl NodeProcessor
 }
 
-func (fa PipelineProcessor) Setup() error {
-	fa.ProcessorImpl.Setup()
+func (fa PipelineProcessor) Setup(customParams interface{}) error {
+	fa.ProcessorImpl.Setup(customParams)
 	return nil
 }
 

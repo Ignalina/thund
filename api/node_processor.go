@@ -20,6 +20,6 @@
 package api
 
 type NodeProcessor interface {
-	Setup() error
+	Setup(customParams interface{}) error
 	Process() error
 }

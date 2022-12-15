@@ -50,7 +50,7 @@ type S3 struct {
 	eventHandlers []api.IOEvent
 }
 
-func (s3 *S3) Setup() error {
+func (s3 *S3) Setup(customParams interface{}) error {
 	ctx := context.Background()
 	s3.initS3()
 	s3.Ctx = ctx
