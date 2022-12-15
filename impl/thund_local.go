@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"github.com/ignalina/thund/api"
 	"os"
 	"os/signal"
@@ -14,7 +15,7 @@ type ThundLocal struct {
 	dagProcessor api.DAG
 }
 
-func (tl ThundLocal) Deploy(dag api.DAG,customParams interface{}) error {
+func (tl ThundLocal) Deploy(dag api.DAG, customParams interface{}) error {
 
 	tl.dagProcessor = dag
 	for _, dp := range tl.dagProcessor.Nodes {
@@ -26,10 +27,12 @@ func (tl ThundLocal) Deploy(dag api.DAG,customParams interface{}) error {
 
 func (tl ThundLocal) Start() error {
 	stop := make(chan struct{})
-	var wg *sync.WaitGroup
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	HandleShutdown(stop)
 
-	go tl.procesDag(wg, stop)
+	go tl.procesDag(&wg, stop)
 
 	wg.Wait()
 	return nil
@@ -37,16 +40,18 @@ func (tl ThundLocal) Start() error {
 
 // Process DAG and listen to system shutdown
 func (tl ThundLocal) procesDag(wg *sync.WaitGroup, stop chan struct{}) {
+	defer wg.Done()
+
 	for true {
-		defer wg.Done()
 		for _, dp := range tl.dagProcessor.Nodes {
-			select {
-			case <-stop:
-				return
-			default:
-			}
 			dp.PipelineProcessor.Process()
 		}
+		select {
+		case <-stop:
+			return
+		default:
+		}
+
 		// todo check for signal for a nice takedown.
 	}
 	return
@@ -59,7 +64,7 @@ func HandleShutdown(stop chan struct{}) {
 	// Setup signal handlers
 	go func() {
 		<-c
-		// This will send the stop signal to all goroutines
+		fmt.Println("Shutting down DAG exection nicely")
 		close(stop)
 	}()
 }
