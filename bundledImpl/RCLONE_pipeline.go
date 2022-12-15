@@ -33,7 +33,7 @@ type RCLONE struct {
 }
 
 // Process all files , and for every sucessful process , add a ".done" file.
-func (rcloneStruct *RCLONE) Setup() error {
+func (rcloneStruct *RCLONE) Setup(customParams interface{}) error {
 	ctx := context.Background()
 	//	rcloneStruct.initHDFS()
 	rcloneStruct.Ctx = ctx
