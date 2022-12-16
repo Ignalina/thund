@@ -19,7 +19,7 @@ func (tl ThundLocal) Deploy(dag api.DAG, customParams interface{}) error {
 
 	tl.dagProcessor = dag
 	for _, dp := range tl.dagProcessor.Nodes {
-		dp.PipelineProcessor.Setup(customParams)
+		dp.NodeProcessor.Setup(customParams)
 	}
 
 	return nil
@@ -44,7 +44,7 @@ func (tl ThundLocal) procesDag(wg *sync.WaitGroup, stop chan struct{}) {
 
 	for true {
 		for _, dp := range tl.dagProcessor.Nodes {
-			dp.PipelineProcessor.Process()
+			dp.NodeProcessor.Process()
 		}
 		select {
 		case <-stop:
