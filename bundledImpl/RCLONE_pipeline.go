@@ -26,6 +26,7 @@ import (
 )
 
 type RCLONE struct {
+	ViperKey      string
 	GraceMilliSec int
 	//	HDFSClient    *hdfs.Client
 	Ctx context.Context
@@ -51,9 +52,10 @@ func (rcloneStruct *RCLONE) Process() error {
 	return nil
 }
 
-func NewRCLONE() *RCLONE {
+func NewRCLONE(viperKey string) *RCLONE {
 	rclone := RCLONE{
-		GraceMilliSec: viper.GetInt("hdfs.gracemillisec"),
+		ViperKey:      viperKey,
+		GraceMilliSec: viper.Sub(viperKey).GetInt("hdfs.gracemillisec"),
 	}
 	return &rclone
 }

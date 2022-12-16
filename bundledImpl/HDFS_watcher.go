@@ -37,6 +37,7 @@ import (
 )
 
 type HDFS struct {
+	ViperKey      string
 	Namenode      string
 	WatchFolder   string
 	MarkerFolder  string
@@ -128,14 +129,15 @@ func (hdfsStruct *HDFS) Process() error {
 	return nil
 }
 
-func NewHDFS() *HDFS {
+func NewHDFS(viperkey string) *HDFS {
 	hdfs := HDFS{
-		Namenode:      viper.GetString("hdfs.namenode"),
-		User:          viper.GetString("hdfs.user"),
-		WatchFolder:   viper.GetString("hdfs.watchfolder"),
-		MarkerFolder:  viper.GetString("hdfs.markerfolder"),
-		ExcludeFolder: viper.GetString("hdfs.excludefolder"),
-		GraceMilliSec: viper.GetInt("hdfs.gracemillisec"),
+		ViperKey:      viperkey,
+		Namenode:      viper.Sub(viperkey).GetString("hdfs.namenode"),
+		User:          viper.Sub(viperkey).GetString("hdfs.user"),
+		WatchFolder:   viper.Sub(viperkey).GetString("hdfs.watchfolder"),
+		MarkerFolder:  viper.Sub(viperkey).GetString("hdfs.markerfolder"),
+		ExcludeFolder: viper.Sub(viperkey).GetString("hdfs.excludefolder"),
+		GraceMilliSec: viper.Sub(viperkey).GetInt("hdfs.gracemillisec"),
 	}
 	return &hdfs
 }

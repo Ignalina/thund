@@ -35,6 +35,7 @@ import (
 )
 
 type S3 struct {
+	ViperKey      string
 	Endpoint      string
 	UseSSL        bool
 	BucketName    string
@@ -115,18 +116,19 @@ func (s3 *S3) Process() error {
 	return nil
 }
 
-func NewS3() *S3 {
+func NewS3(viperKey string) *S3 {
 	s3 := S3{
-		Endpoint:      viper.GetString("s3.endpoint"),
-		UseSSL:        viper.GetBool("s3.usessl"),
-		BucketName:    viper.GetString("s3.bucketname"),
-		User:          viper.GetString("s3.user"),
-		Password:      viper.GetString("s3.password"),
-		Token:         viper.GetString("s3.token"),
-		WatchFolder:   viper.GetString("s3.watchfolder"),
-		MarkerFolder:  viper.GetString("s3.markerfolder"),
-		ExcludeFolder: viper.GetString("s3.excludefolder"),
-		GraceMilliSec: viper.GetInt("s3.gracemillisec"),
+		ViperKey:      viperKey,
+		Endpoint:      viper.Sub(viperKey).GetString("s3.endpoint"),
+		UseSSL:        viper.Sub(viperKey).GetBool("s3.usessl"),
+		BucketName:    viper.Sub(viperKey).GetString("s3.bucketname"),
+		User:          viper.Sub(viperKey).GetString("s3.user"),
+		Password:      viper.Sub(viperKey).GetString("s3.password"),
+		Token:         viper.Sub(viperKey).GetString("s3.token"),
+		WatchFolder:   viper.Sub(viperKey).GetString("s3.watchfolder"),
+		MarkerFolder:  viper.Sub(viperKey).GetString("s3.markerfolder"),
+		ExcludeFolder: viper.Sub(viperKey).GetString("s3.excludefolder"),
+		GraceMilliSec: viper.Sub(viperKey).GetInt("s3.gracemillisec"),
 	}
 	return &s3
 }
